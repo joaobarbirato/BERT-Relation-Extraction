@@ -69,16 +69,11 @@ def train_and_fit(args):
         lower_case = True
         model_name = 'BERTimbal'
         config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
-        if args.task != 'fewrel':
-            net = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
-                                            config=config, \
-                                            force_download=False)
-        else:
-            net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
+        net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                             config=config,
                                             force_download=False, \
-                                            model_size='bert-base-portuguese-cased', \
-                                            task='fewrel',\
+                                            model_size='bert-base-uncased', \
+                                            task='classification' if args.task != 'fewrel' else 'fewrel',\
                                             n_classes_=args.num_classes)
     
     tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
