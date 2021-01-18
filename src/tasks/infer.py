@@ -86,8 +86,7 @@ class infer_from_trained(object):
             config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
             self.net = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                                 config=config,
-                                                force_download=False, \
-                                                n_classes_=self.args.num_classes)
+                                                force_download=False)
         
         self.tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
         self.net.resize_token_embeddings(len(self.tokenizer))
