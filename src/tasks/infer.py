@@ -85,7 +85,7 @@ class infer_from_trained(object):
             model_name = 'BERTimbal'
             config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
             self.net = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
-                                                config=config,
+                                                config=config, \
                                                 force_download=False)
         
         self.tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
