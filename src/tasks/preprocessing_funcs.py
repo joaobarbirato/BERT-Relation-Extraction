@@ -304,6 +304,7 @@ def load_dataloaders(args):
         lower_case = False
         model_name = 'BioBERT'
     elif args.model_no == 3:
+        from ..model.BERT.tokenization_bert import BertTokenizer as Tokenizer
         model = 'bert-base-portuguese-cased'
         lower_case = True
         model_name = 'BERTimbal'
