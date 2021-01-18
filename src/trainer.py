@@ -59,12 +59,12 @@ def train_and_fit(args):
                                           force_download=False, \
                                           model_size='bert-base-uncased')
     elif args.model_no == 3: # BERTimbal
-        from .model.BERT.modeling_bert import BertModel, BertConfig
+        from .model.BERT.modeling_bert import BertModel, BertConfig, BertForSequenceClassification
         model = 'bert-base-portuguese-cased'
         lower_case = True
         model_name = 'BERTimbal'
         config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
-        net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
+        net = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                             config=config,
                                             force_download=False, \
                                             model_size='bert-base-portuguese-cased')

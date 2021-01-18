@@ -63,10 +63,10 @@ if __name__ == "__main__":
 
     
     # For testing additional models
-    from src.model.BERT.modeling_bert import BertModel, BertConfig
+    from src.model.BERT.modeling_bert import BertModel, BertConfig, BertForSequenceClassification
     from src.model.BERT.tokenization_bert import BertTokenizer as Tokenizer
     config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
-    model = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
+    model = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                         config=config,
                                         force_download=False, \
                                         model_size='bert-base-portuguese-cased',
