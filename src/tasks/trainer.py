@@ -64,7 +64,7 @@ def train_and_fit(args):
                                           task='classification' if args.task != 'fewrel' else 'fewrel',\
                                           n_classes_=args.num_classes)
     elif args.model_no == 3: # BERTimbal
-        from .model.BERT.modeling_bert import BertModel, BertConfig
+        from ..model.BERT.modeling_bert import BertModel, BertConfig
         model = 'bert-base-portuguese-cased'
         lower_case = True
         model_name = 'BERTimbal'
