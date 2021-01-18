@@ -98,7 +98,7 @@ def train_and_fit(args):
                            "classification_layer", "blanks_linear", "lm_linear", "cls"]
     elif args.model_no == 3:
         unfrozen_layers = ["classifier", "pooler", "encoder.layer.11", \
-                           "classification_layer", "blanks_linear", "lm_linear", "cls"]
+                           "classification_layer"]
         
     for name, param in net.named_parameters():
         if not any([layer in name for layer in unfrozen_layers]):
