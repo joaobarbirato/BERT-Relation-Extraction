@@ -191,7 +191,11 @@ class pretrain_dataset(Dataset):
             model = 'bert-base-uncased'
             lower_case = False
             model_name = 'BioBERT'
-        
+        elif args.model_no == 3:
+            model = 'bert-base-portuguese-cased'
+            lower_case = True
+            model_name = 'BERTimbal'
+
         tokenizer_path = './data/%s_tokenizer.pkl' % (model_name)
         if os.path.isfile(tokenizer_path):
             self.tokenizer = load_pickle('%s_tokenizer.pkl' % (model_name))
@@ -200,6 +204,11 @@ class pretrain_dataset(Dataset):
             if args.model_no == 2:
                 self.tokenizer = Tokenizer(vocab_file='./additional_models/biobert_v1.1_pubmed/vocab.txt',
                                            do_lower_case=False)
+
+            elif args.model_no == 3:
+                self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
+                                           do_lower_case=True)
+
             else:
                 self.tokenizer = Tokenizer.from_pretrained(model, do_lower_case=False)
             self.tokenizer.add_tokens(['[E1]', '[/E1]', '[E2]', '[/E2]', '[BLANK]'])

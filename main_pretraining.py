@@ -33,12 +33,14 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=0.0001, help="learning rate")
     parser.add_argument("--model_no", type=int, default=0, help='''Model ID: 0 - BERT\n
                                                                             1 - ALBERT\n
-                                                                            2 - BioBERT''')
+                                                                            2 - BioBERT\n
+                                                                            3 - BERTimbal''')
     parser.add_argument("--model_size", type=str, default='bert-base-uncased', help="For BERT: 'bert-base-uncased', \
                                                                                                 'bert-large-uncased',\
                                                                                     For ALBERT: 'albert-base-v2',\
                                                                                                 'albert-large-v2',\
-                                                                                    For BioBERT: 'bert-base-uncased' (biobert_v1.1_pubmed)")
+                                                                                    For BioBERT: 'bert-base-uncased' (biobert_v1.1_pubmed), \
+                                                                                    For BERTimbal: 'bert-base-portuguese-cased'")
     
     args = parser.parse_args()
     
@@ -58,3 +60,17 @@ if __name__ == "__main__":
     tokenizer = Tokenizer(vocab_file='./additional_models/biobert_v1.1_pubmed/vocab.txt',
                           do_lower_case=False)
     '''
+
+    
+    # For testing additional models
+    from src.model.BERT.modeling_bert import BertModel, BertConfig
+    from src.model.BERT.tokenization_bert import BertTokenizer as Tokenizer
+    config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
+    model = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
+                                        config=config,
+                                        force_download=False, \
+                                        model_size='bert-base-portuguese-cased',
+                                        task='classification',\
+                                        n_classes_=12)
+    tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
+                            do_lower_case=False)

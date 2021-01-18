@@ -10,4 +10,5 @@
 *.bin
 /data/*
 /additional_models/biobert_v1.1_pubmed/*
+/additional_models/bert-base-portuguese-cased/*
 /__pycache__/*
