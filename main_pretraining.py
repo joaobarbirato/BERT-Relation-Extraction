@@ -69,8 +69,6 @@ if __name__ == "__main__":
     model = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                         config=config,
                                         force_download=False, \
-                                        model_size='bert-base-portuguese-cased',
-                                        task='classification',\
                                         n_classes_=12)
     tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
                             do_lower_case=False)

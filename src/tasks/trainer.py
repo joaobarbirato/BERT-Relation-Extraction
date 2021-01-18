@@ -73,15 +73,13 @@ def train_and_fit(args):
             net = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                             config=config,
                                             force_download=False, \
-                                            model_size='bert-base-portuguese-cased', \
-                                            task='classification',\
                                             n_classes_=args.num_classes)
         else:
             net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                             config=config,
                                             force_download=False, \
                                             model_size='bert-base-portuguese-cased', \
-                                            task='classification',\
+                                            task='fewrel',\
                                             n_classes_=args.num_classes)
     
     tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
@@ -105,7 +103,8 @@ def train_and_fit(args):
         unfrozen_layers = ["classifier", "pooler", "encoder.layer.11", \
                            "classification_layer", "blanks_linear", "lm_linear", "cls"]
     elif args.model_no == 3:
-        unfrozen_layers = ["classifier", "pooler", "encoder.layer.11"]
+        unfrozen_layers = ["classifier", "pooler", "encoder.layer.11", \
+                           "classification_layer", "blanks_linear", "lm_linear", "cls"]
         
     for name, param in net.named_parameters():
         if not any([layer in name for layer in unfrozen_layers]):
