@@ -72,7 +72,6 @@ def train_and_fit(args):
         if args.task != 'fewrel':
             net = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                             config=config, \
-                                            model_size='bert-base-portuguese-cased', \
                                             force_download=False)
         else:
             net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
