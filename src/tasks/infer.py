@@ -79,7 +79,7 @@ class infer_from_trained(object):
                                                  task='classification',\
                                                  n_classes_=self.args.num_classes)
         elif args.model_no == 3: # BERTimbal
-            from .model.BERT.modeling_bert import BertConfig, BertForSequenceClassification
+            from ..model.BERT.modeling_bert import BertConfig, BertModel
             model = 'bert-base-portuguese-cased'
             lower_case = True
             model_name = 'BERTimbal'
