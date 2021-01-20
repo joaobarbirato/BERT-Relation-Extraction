@@ -339,6 +339,17 @@ def load_dataloaders(args):
             rm = load_pickle('relations.pkl')
             df_train = load_pickle('df_train.pkl')
             df_test = load_pickle('df_test.pkl')
+
+            # saving new relations
+            print("Saving new relations")
+            rm = Relations_Mapper(df_train['relations'])
+            save_as_pickle('relations.pkl', rm)
+            df_test['relations_id'] = df_test.progress_apply(lambda x: rm.rel2idx[x['relations']], axis=1)
+            df_train['relations_id'] = df_train.progress_apply(lambda x: rm.rel2idx[x['relations']], axis=1)
+            save_as_pickle('df_train.pkl', df_train)
+            save_as_pickle('df_test.pkl', df_test)
+            logger.info("Finished and saved!")
+
             logger.info("Loaded preproccessed data.")
         else:
             df_train, df_test, rm = preprocess_semeval2010_8(args)
