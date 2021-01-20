@@ -332,27 +332,27 @@ def load_dataloaders(args):
     assert e1_id != e2_id != 1
     
     if args.task == 'semeval':
-        relations_path = './data/relations.pkl'
-        train_path = './data/df_train.pkl'
-        test_path = './data/df_test.pkl'
-        if os.path.isfile(relations_path) and os.path.isfile(train_path) and os.path.isfile(test_path):
-            rm = load_pickle('relations.pkl')
-            df_train = load_pickle('df_train.pkl')
-            df_test = load_pickle('df_test.pkl')
+        # relations_path = './data/relations.pkl'
+        # train_path = './data/df_train.pkl'
+        # test_path = './data/df_test.pkl'
+        # if os.path.isfile(relations_path) and os.path.isfile(train_path) and os.path.isfile(test_path):
+        #     rm = load_pickle('relations.pkl')
+        #     df_train = load_pickle('df_train.pkl')
+        #     df_test = load_pickle('df_test.pkl')
 
-            # saving new relations
-            print("Saving new relations")
-            rm = Relations_Mapper(df_train['relations'])
-            save_as_pickle('relations.pkl', rm)
-            df_test['relations_id'] = df_test.progress_apply(lambda x: rm.rel2idx[x['relations']], axis=1)
-            df_train['relations_id'] = df_train.progress_apply(lambda x: rm.rel2idx[x['relations']], axis=1)
-            save_as_pickle('df_train.pkl', df_train)
-            save_as_pickle('df_test.pkl', df_test)
-            logger.info("Finished and saved!")
+        #     # saving new relations
+        #     logger.info("Saving new relations from ")
+        #     rm = Relations_Mapper(df_train['relations'])
+        #     save_as_pickle('relations.pkl', rm)
+        #     df_test['relations_id'] = df_test.progress_apply(lambda x: rm.rel2idx[x['relations']], axis=1)
+        #     df_train['relations_id'] = df_train.progress_apply(lambda x: rm.rel2idx[x['relations']], axis=1)
+        #     save_as_pickle('df_train.pkl', df_train)
+        #     save_as_pickle('df_test.pkl', df_test)
+        #     logger.info("Finished and saved!")
 
-            logger.info("Loaded preproccessed data.")
-        else:
-            df_train, df_test, rm = preprocess_semeval2010_8(args)
+        #     logger.info("Loaded preproccessed data.")
+        # else:
+        df_train, df_test, rm = preprocess_semeval2010_8(args)
         
         train_set = semeval_dataset(df_train, tokenizer=tokenizer, e1_id=e1_id, e2_id=e2_id)
         test_set = semeval_dataset(df_test, tokenizer=tokenizer, e1_id=e1_id, e2_id=e2_id)
