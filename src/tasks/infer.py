@@ -240,7 +240,7 @@ class infer_from_trained(object):
         logger.info("Creating infer file")
         df_test = load_pickle('df_test.pkl')
         sents = df_test['sents'].values
-        infered_sents = [self.infer_one_sentence(sentence) for sentence in sents]
+        infered_sents = [self.rm.idx2rel[self.infer_one_sentence(sentence)].strip() for sentence in sents]
         df_infered = pd.DataFrame([], columns=['sents', 'true', 'infer'])
         df_infered['sents'] = sents
         df_infered['true'] = df_test['relations'].values
