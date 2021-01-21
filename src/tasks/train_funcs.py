@@ -64,10 +64,14 @@ def evaluate_(output, labels, ignore_idx):
     o_labels = torch.softmax(output, dim=1).max(1)[1]
     l = labels.squeeze()[idxs]; o = o_labels[idxs]
 
-    if len(idxs) > 1:
-        acc = (l == o).sum().item()/len(idxs)
-    else:
+    try:
+        if len(idxs) > 1:
+            acc = (l == o).sum().item()/len(idxs)
+        else:
+            acc = (l == o).sum().item()
+    except TypeError: # len() of a 0-d tensor
         acc = (l == o).sum().item()
+        
     l = l.cpu().numpy().tolist() if l.is_cuda else l.numpy().tolist()
     o = o.cpu().numpy().tolist() if o.is_cuda else o.numpy().tolist()
 
