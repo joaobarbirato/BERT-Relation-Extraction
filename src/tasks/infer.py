@@ -233,6 +233,22 @@ class infer_from_trained(object):
         else:
             return self.infer_one_sentence(sentence)
 
+    def infer_save_test(self):
+        """
+        docstring
+        """
+        logger.info("Creating infer file")
+        df_test = load_pickle('df_test.pkl')
+        sents = df_test['sents'].values
+        infered_sents = [self.infer_one_sentence(sentence, detect) for sentence in sents]
+        df_infered = pd.DataFrame([], columns=['sents', 'true', 'infer'])
+        df_infered['sents'] = sents
+        df_infered['true'] = df_test['relations'].values
+        df_infered['infer'] = infered_sents
+        save_as_pickle('df_infered.pkl', df_infered)
+        logger.info("Infer file created!")
+
+
 class FewRel(object):
     def __init__(self, args=None):
         if args is None:
