@@ -30,7 +30,11 @@ def train_and_fit(args):
     
     cuda = torch.cuda.is_available()
     
-    train_loader = load_dataloaders(args)
+    if args.model_no == 3:
+        # 50 was established following the proportion len(cnn.txt)/50000
+        train_loader = load_dataloaders(args, max_length=50)
+    else:
+        train_loader = load_dataloaders(args)
     train_len = len(train_loader)
     logger.info("Loaded %d pre-training samples." % train_len)
     
