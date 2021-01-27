@@ -410,35 +410,35 @@ class Pad_Sequence():
 
 def load_dataloaders(args, max_length=50000):
     
-    if not os.path.isfile("./data/D.pkl"):
-        logger.info("Loading pre-training data...")
-        with open(args.pretrain_data, "r", encoding="utf8") as f:
-            text = f.readlines()
-        
-        #text = text[:1500] # restrict size for testing
-        text = process_textlines(text)
-        
-        logger.info("Length of text (characters): %d" % len(text))
-        num_chunks = math.ceil(len(text)/max_length)
-        logger.info("Splitting into %d max length chunks of size %d" % (num_chunks, max_length))
-        text_chunks = (text[i*max_length:(i*max_length + max_length)] for i in range(num_chunks))
-        
-        D = []
-        logger.info("Loading Spacy NLP...")
-        if args.model_no == 3:
-            nlp = spacy.load("pt_core_news_lg")
-        else:
-            nlp = spacy.load("en_core_web_lg")
-        
-        for text_chunk in tqdm(text_chunks, total=num_chunks):
-            D.extend(create_pretraining_corpus(text_chunk, nlp, window_size=40))
-            
-        logger.info("Total number of relation statements in pre-training corpus: %d" % len(D))
-        save_as_pickle("D.pkl", D)
-        logger.info("Saved pre-training corpus to %s" % "./data/D.pkl")
+    # if not os.path.isfile("./data/D.pkl"):
+    logger.info("Loading pre-training data...")
+    with open(args.pretrain_data, "r", encoding="utf8") as f:
+        text = f.readlines()
+    
+    #text = text[:1500] # restrict size for testing
+    text = process_textlines(text)
+    
+    logger.info("Length of text (characters): %d" % len(text))
+    num_chunks = math.ceil(len(text)/max_length)
+    logger.info("Splitting into %d max length chunks of size %d" % (num_chunks, max_length))
+    text_chunks = (text[i*max_length:(i*max_length + max_length)] for i in range(num_chunks))
+    
+    D = []
+    logger.info("Loading Spacy NLP...")
+    if args.model_no == 3:
+        nlp = spacy.load("pt_core_news_lg")
     else:
-        logger.info("Loaded pre-training data from saved file")
-        D = load_pickle("D.pkl")
+        nlp = spacy.load("en_core_web_lg")
+    
+    for text_chunk in tqdm(text_chunks, total=num_chunks):
+        D.extend(create_pretraining_corpus(text_chunk, nlp, window_size=40))
+        
+    logger.info("Total number of relation statements in pre-training corpus: %d" % len(D))
+    save_as_pickle("D.pkl", D)
+    logger.info("Saved pre-training corpus to %s" % "./data/D.pkl")
+    # else:
+    #     logger.info("Loaded pre-training data from saved file")
+    #     D = load_pickle("D.pkl")
         
     train_set = pretrain_dataset(args, D, batch_size=args.batch_size)
     train_length = len(train_set)
