@@ -70,7 +70,7 @@ if __name__ == "__main__":
                                             config=config,
                                             force_download=False, \
                                             model_size='bert-base-uncased', \
-                                            task='classification' if args.task != 'fewrel' else 'fewrel',\
+                                            task='classification',\
                                             n_classes_=args.num_classes)
     tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
                             do_lower_case=False)
