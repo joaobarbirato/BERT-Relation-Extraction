@@ -31,6 +31,7 @@ if __name__ == "__main__":
     parser.add_argument("--fp16", type=int, default=0, help="1: use mixed precision ; 0: use floating point 32") # mixed precision doesn't seem to train well
     parser.add_argument("--num_epochs", type=int, default=18, help="No of epochs")
     parser.add_argument("--lr", type=float, default=0.0001, help="learning rate")
+    parser.add_argument("--custom_pkl", type=int, default=0, help="0: No custom pkl\n1: True")
     parser.add_argument("--model_no", type=int, default=0, help='''Model ID: 0 - BERT\n
                                                                             1 - ALBERT\n
                                                                             2 - BioBERT\n
