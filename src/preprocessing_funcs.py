@@ -209,6 +209,10 @@ class pretrain_dataset(Dataset):
                 self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
                                            do_lower_case=True)
 
+            elif args.model_no == 4:
+                self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-uncased/vocab.txt',
+                                           do_lower_case=True)
+
             else:
                 self.tokenizer = Tokenizer.from_pretrained(model, do_lower_case=False)
             self.tokenizer.add_tokens(['[E1]', '[/E1]', '[E2]', '[/E2]', '[BLANK]'])
