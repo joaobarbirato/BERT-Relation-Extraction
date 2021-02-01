@@ -75,6 +75,19 @@ def train_and_fit(args):
                                             model_size='bert-base-uncased', \
                                             task='classification' if args.task != 'fewrel' else 'fewrel',\
                                             n_classes_=args.num_classes)
+    # bert-base-multilingual-uncased
+    elif args.model_no == 4: # BERTMultilingual
+        from ..model.BERT.modeling_bert import BertModel, BertConfig, BertForSequenceClassification
+        model = 'bert-base-multilingual-uncased'
+        lower_case = True
+        model_name = 'BERTMultilingual'
+        config = BertConfig.from_pretrained('./additional_models/bert-base-multilingual-uncased/config.json')
+        net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-multilingual-uncased/pytorch_model.bin', 
+                                            config=config,
+                                            force_download=False, \
+                                            model_size='bert-base-uncased', \
+                                            task='classification' if args.task != 'fewrel' else 'fewrel',\
+                                            n_classes_=args.num_classes)
     
     tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
     net.resize_token_embeddings(len(tokenizer))
@@ -96,7 +109,7 @@ def train_and_fit(args):
     elif args.model_no == 2:
         unfrozen_layers = ["classifier", "pooler", "encoder.layer.11", \
                            "classification_layer", "blanks_linear", "lm_linear", "cls"]
-    elif args.model_no == 3:
+    elif args.model_no == 3 or args.model_no == 4:
         unfrozen_layers = ["classifier", "pooler", "encoder.layer.11", \
                            "classification_layer", "blanks_linear", "lm_linear", "cls"]
         

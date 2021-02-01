@@ -304,11 +304,17 @@ def load_dataloaders(args):
         model = 'bert-base-uncased'
         lower_case = False
         model_name = 'BioBERT'
+    # bert-base-multilingual-uncased
     elif args.model_no == 3:
         from ..model.BERT.tokenization_bert import BertTokenizer as Tokenizer
         model = 'bert-base-portuguese-cased'
         lower_case = True
         model_name = 'BERTimbal'
+    elif args.model_no == 4:
+        from ..model.BERT.tokenization_bert import BertTokenizer as Tokenizer
+        model = 'bert-base-multilingual-uncased'
+        lower_case = True
+        model_name = 'BERTMultilingual'
         
     if os.path.isfile("./data/%s_tokenizer.pkl" % model_name):
         tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
@@ -320,6 +326,9 @@ def load_dataloaders(args):
                                   do_lower_case=False)
         elif args.model_no == 3:
             tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
+                                           do_lower_case=True)
+        elif args.model_no == 4:
+            tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-uncased/vocab.txt',
                                            do_lower_case=True)
         else:
             tokenizer = Tokenizer.from_pretrained(model, do_lower_case=False)

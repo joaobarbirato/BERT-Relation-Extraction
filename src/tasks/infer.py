@@ -90,6 +90,18 @@ class infer_from_trained(object):
                                             model_size='bert-base-uncased', \
                                             task='classification',\
                                             n_classes_=args.num_classes)
+        elif args.model_no == 4: # Multilingual BERT
+            from ..model.BERT.modeling_bert import BertConfig, BertModel
+            model = 'bert-base-multilingual-uncased'
+            lower_case = True
+            model_name = 'BERTMultilingual'
+            config = BertConfig.from_pretrained('./additional_models/bert-base-multilingual-uncased/config.json')
+            self.net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-multilingual-uncased/pytorch_model.bin', 
+                                            config=config,
+                                            force_download=False, \
+                                            model_size='bert-base-uncased', \
+                                            task='classification',\
+                                            n_classes_=args.num_classes)
         
         self.tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
         self.net.resize_token_embeddings(len(self.tokenizer))
@@ -288,6 +300,7 @@ class FewRel(object):
                                             model_size='bert-base-uncased',
                                             task='fewrel')
 
+        # bert-base-multilingual-uncased
         elif args.model_no == 3: # BERTimbal
             from .model.BERT.modeling_bert import BertModel, BertConfig
             model = 'bert-base-portuguese-cased'
@@ -295,6 +308,17 @@ class FewRel(object):
             model_name = 'BERTimbal'
             config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
             self.net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
+                                                config=config,
+                                                force_download=False, \
+                                                model_size='bert-base-portuguese-cased', \
+                                                task='fewrel')
+        elif args.model_no == 4: # bert-base-multilingual-uncased
+            from .model.BERT.modeling_bert import BertModel, BertConfig
+            model = 'bert-base-multilingual-uncased'
+            lower_case = True
+            model_name = 'BERTMultilingual'
+            config = BertConfig.from_pretrained('./additional_models/bert-base-multilingual-uncased/config.json')
+            self.net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-multilingual-uncased/pytorch_model.bin', 
                                                 config=config,
                                                 force_download=False, \
                                                 model_size='bert-base-portuguese-cased', \
@@ -310,6 +334,9 @@ class FewRel(object):
                                            do_lower_case=False)
             elif args.model_no == 3:
                 self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
+                                           do_lower_case=True)
+            elif args.model_no == 4:
+                self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-uncased/vocab.txt',
                                            do_lower_case=True)
             else:
                 self.tokenizer = Tokenizer.from_pretrained(model, do_lower_case=False)

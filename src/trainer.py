@@ -30,7 +30,7 @@ def train_and_fit(args):
     
     cuda = torch.cuda.is_available()
     
-    if args.model_no == 3:
+    if args.model_no == 3 or args.model_no == 4:
         # 50 was established following the proportion len(cnn.txt)/50000
         train_loader = load_dataloaders(args, max_length=180)
     else:
@@ -69,6 +69,16 @@ def train_and_fit(args):
         model_name = 'BERTimbal'
         config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
         net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
+                                            config=config,
+                                            force_download=False, \
+                                            model_size='bert-base-uncased')
+    elif args.model_no == 4: # Multilingual BERT
+        from .model.BERT.modeling_bert import BertModel, BertConfig
+        model = 'bert-base-multilingual-uncased'
+        lower_case = True
+        model_name = 'BERTimbal'
+        config = BertConfig.from_pretrained('./additional_models/bert-base-multilingual-uncased/config.json')
+        net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-multilingual-uncased/pytorch_model.bin', 
                                             config=config,
                                             force_download=False, \
                                             model_size='bert-base-uncased')
