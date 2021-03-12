@@ -36,16 +36,19 @@ if __name__ == "__main__":
     parser.add_argument("--model_no", type=int, default=0, help='''Model ID: 0 - BERT\n
                                                                             1 - ALBERT\n
                                                                             2 - BioBERT\n
-                                                                            3 - BERTimbal\n
+                                                                            3 - BERTimbau\n
                                                                             4 - BERTMultilingual''')
     parser.add_argument("--model_size", type=str, default='bert-base-uncased', help="For BERT: 'bert-base-uncased', \
                                                                                                 'bert-large-uncased',\
                                                                                     For ALBERT: 'albert-base-v2',\
                                                                                                 'albert-large-v2',\
                                                                                     For BioBERT: 'bert-base-uncased' (biobert_v1.1_pubmed), \
-                                                                                    For BERTimbal: 'bert-base-portuguese-cased' \
-                                                                                    For BERTMultilingual")    parser.add_argument("--train", type=int, default=1, help="0: Don't train, 1: train")
+                                                                                    For BERTimbau: 'bert-base-portuguese-cased' \
+                                                                                    For BERTMultilingual")    
+    parser.add_argument("--train", type=int, default=1, help="0: Don't train, 1: train")
     parser.add_argument("--infer", type=int, default=1, help="0: Don't infer, 1: Infer")
+    parser.add_argument("--detect_entities", type=int, default=0, help="0: Don't detect entities on infer, \
+                                                                        1: Detect")
     
     args = parser.parse_args()
     
@@ -54,7 +57,7 @@ if __name__ == "__main__":
         
     if (args.infer == 1) and (args.task != 'fewrel'):
         inferer = infer_from_trained(args, detect_entities=True)
-        if args.model_no != 3:
+        if args.model_no < 3:
         
             test = "The surprise [E1]visit[/E1] caused a [E2]frenzy[/E2] on the already chaotic trading floor."
             inferer.infer_sentence(test, detect_entities=False)
@@ -67,7 +70,7 @@ if __name__ == "__main__":
                     break
                 inferer.infer_sentence(sent, detect_entities=False)
         else:
-            inferer.infer_save_test()
+            inferer.infer_save_test(detect_entities=True if args.detect_entities == 1 else False)
 
     if args.task == 'fewrel':
         fewrel = FewRel(args)

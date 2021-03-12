@@ -304,15 +304,15 @@ def load_dataloaders(args):
         model = 'bert-base-uncased'
         lower_case = False
         model_name = 'BioBERT'
-    # bert-base-multilingual-uncased
+    # bert-base-multilingual-cased
     elif args.model_no == 3:
         from ..model.BERT.tokenization_bert import BertTokenizer as Tokenizer
         model = 'bert-base-portuguese-cased'
         lower_case = True
-        model_name = 'BERTimbal'
+        model_name = 'BERTimbau'
     elif args.model_no == 4:
         from ..model.BERT.tokenization_bert import BertTokenizer as Tokenizer
-        model = 'bert-base-multilingual-uncased'
+        model = 'bert-base-multilingual-cased'
         lower_case = True
         model_name = 'BERTMultilingual'
         
@@ -326,10 +326,10 @@ def load_dataloaders(args):
                                   do_lower_case=False)
         elif args.model_no == 3:
             tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
-                                           do_lower_case=True)
+                                           do_lower_case=False)
         elif args.model_no == 4:
-            tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-uncased/vocab.txt',
-                                           do_lower_case=True)
+            tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-cased/vocab.txt',
+                                           do_lower_case=False)
         else:
             tokenizer = Tokenizer.from_pretrained(model, do_lower_case=False)
         tokenizer.add_tokens(['[E1]', '[/E1]', '[E2]', '[/E2]', '[BLANK]'])

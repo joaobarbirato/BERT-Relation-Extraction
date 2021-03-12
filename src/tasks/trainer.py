@@ -63,11 +63,11 @@ def train_and_fit(args):
                                           model_size='bert-base-uncased',
                                           task='classification' if args.task != 'fewrel' else 'fewrel',\
                                           n_classes_=args.num_classes)
-    elif args.model_no == 3: # BERTimbal
-        from ..model.BERT.modeling_bert import BertModel, BertConfig, BertForSequenceClassification
+    elif args.model_no == 3: # BERTimbau
+        from ..model.BERT.modeling_bert import BertModel, BertConfig
         model = 'bert-base-portuguese-cased'
         lower_case = True
-        model_name = 'BERTimbal'
+        model_name = 'BERTimbau'
         config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
         net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                             config=config,
@@ -75,19 +75,16 @@ def train_and_fit(args):
                                             model_size='bert-base-uncased', \
                                             task='classification' if args.task != 'fewrel' else 'fewrel',\
                                             n_classes_=args.num_classes)
-    # bert-base-multilingual-uncased
+    # bert-base-multilingual-cased
     elif args.model_no == 4: # BERTMultilingual
-        from ..model.BERT.modeling_bert import BertModel, BertConfig, BertForSequenceClassification
-        model = 'bert-base-multilingual-uncased'
-        lower_case = True
+        from ..model.BERT.modeling_bert import BertModel as Model
+        model = 'bert-base-multilingual-cased'
+        lower_case = False
         model_name = 'BERTMultilingual'
-        config = BertConfig.from_pretrained('./additional_models/bert-base-multilingual-uncased/config.json')
-        net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-multilingual-uncased/pytorch_model.bin', 
-                                            config=config,
-                                            force_download=False, \
-                                            model_size='bert-base-uncased', \
-                                            task='classification' if args.task != 'fewrel' else 'fewrel',\
-                                            n_classes_=args.num_classes)
+        net = Model.from_pretrained(model, force_download=False, \
+                                model_size=args.model_size,
+                                task='classification' if args.task != 'fewrel' else 'fewrel',\
+                                n_classes_=args.num_classes)
     
     tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
     net.resize_token_embeddings(len(tokenizer))
@@ -147,12 +144,15 @@ def train_and_fit(args):
         scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[2,4,6,8,12,15,18,20,22,\
                                                                           24,26,30], gamma=0.8)
     
-    losses_per_epoch, accuracy_per_epoch, test_f1_per_epoch = load_results(args.model_no)
+    losses_per_epoch, accuracy_per_epoch, test_f1_per_epoch, test_f1_nonseq_micro_per_epoch, \
+        test_f1_nonseq_macro_per_epoch, test_accuracy_per_epoch, \
+        precision_recall_micro_per_epoch, precision_recall_macro_per_epoch = load_results(args.model_no)
     
     logger.info("Starting training process...")
     pad_id = tokenizer.pad_token_id
     mask_id = tokenizer.mask_token_id
     update_size = len(train_loader)//10
+    all_start_time = time.time()
     for epoch in range(start_epoch, args.num_epochs):
         start_time = time.time()
         net.train(); total_loss = 0.0; losses_per_batch = []; total_acc = 0.0; accuracy_per_batch = []
@@ -202,14 +202,30 @@ def train_and_fit(args):
                 total_loss = 0.0; total_acc = 0.0
         
         scheduler.step()
-        results = evaluate_results(net, test_loader, pad_id, cuda)
+        results, results_micro, results_macro, test_accuracy = evaluate_results(net, test_loader, pad_id, cuda)
         losses_per_epoch.append(sum(losses_per_batch)/len(losses_per_batch))
         accuracy_per_epoch.append(sum(accuracy_per_batch)/len(accuracy_per_batch))
         test_f1_per_epoch.append(results['f1'])
+
+        # New metrics
+        test_f1_nonseq_micro_per_epoch.append(results_micro['f1'])
+        test_f1_nonseq_macro_per_epoch.append(results_macro['f1'])
+        test_accuracy_per_epoch.append(test_accuracy)
+        precision_recall_micro_per_epoch.append(
+            (results_micro['precision'], results_micro['recall'])
+        )
+        precision_recall_macro_per_epoch.append(
+            (results_micro['precision'], results_micro['recall'])
+        )
+
         print("Epoch finished, took %.2f seconds." % (time.time() - start_time))
         print("Losses at Epoch %d: %.7f" % (epoch + 1, losses_per_epoch[-1]))
         print("Train accuracy at Epoch %d: %.7f" % (epoch + 1, accuracy_per_epoch[-1]))
         print("Test f1 at Epoch %d: %.7f" % (epoch + 1, test_f1_per_epoch[-1]))
+
+        print(f"Test f1 nonseq micro at Epoch {epoch + 1}: {test_f1_nonseq_micro_per_epoch[-1]:.3f}")
+        print(f"Test f1 nonseq macro at Epoch {epoch + 1}: {test_f1_nonseq_macro_per_epoch[-1]:.3f}")
+
         
         if accuracy_per_epoch[-1] > best_pred:
             best_pred = accuracy_per_epoch[-1]
@@ -226,6 +242,14 @@ def train_and_fit(args):
             save_as_pickle("task_test_losses_per_epoch_%d.pkl" % args.model_no, losses_per_epoch)
             save_as_pickle("task_train_accuracy_per_epoch_%d.pkl" % args.model_no, accuracy_per_epoch)
             save_as_pickle("task_test_f1_per_epoch_%d.pkl" % args.model_no, test_f1_per_epoch)
+
+            save_as_pickle("task_test_f1_nonseq_micro_per_epoch_%d.pkl" % args.model_no, test_f1_nonseq_micro_per_epoch)
+            save_as_pickle("task_test_f1_nonseq_macro_per_epoch_%d.pkl" % args.model_no, test_f1_nonseq_macro_per_epoch)
+            save_as_pickle("task_test_accuracy_per_epoch_%d.pkl" % args.model_no, test_accuracy_per_epoch)
+
+            save_as_pickle("task_test_precision_recall_micro_per_epoch_%d.pkl" % args.model_no, precision_recall_micro_per_epoch)
+            save_as_pickle("task_test_precision_recall_macro_per_epoch_%d.pkl" % args.model_no, precision_recall_macro_per_epoch)
+
             torch.save({
                     'epoch': epoch + 1,\
                     'state_dict': net.state_dict(),\
@@ -234,7 +258,7 @@ def train_and_fit(args):
                     'scheduler' : scheduler.state_dict(),\
                     'amp': amp.state_dict() if amp is not None else amp
                 }, os.path.join("./data/" , "task_test_checkpoint_%d.pth.tar" % args.model_no))
-    
+    save_as_pickle(f"task_elapsed_{args.model_no}.pkl", time.time() - all_start_time)
     logger.info("Finished Training!")
     fig = plt.figure(figsize=(20,20))
     ax = fig.add_subplot(111)
@@ -259,8 +283,35 @@ def train_and_fit(args):
     ax3.scatter([e for e in range(len(test_f1_per_epoch))], test_f1_per_epoch)
     ax3.tick_params(axis="both", length=2, width=1, labelsize=14)
     ax3.set_xlabel("Epoch", fontsize=22)
-    ax3.set_ylabel("Test F1 Accuracy", fontsize=22)
+    ax3.set_ylabel("Test F1", fontsize=22)
     ax3.set_title("Test F1 vs Epoch", fontsize=32)
     plt.savefig(os.path.join("./data/" ,"task_test_f1_vs_epoch_%d.png" % args.model_no))
+
+    fig4 = plt.figure(figsize=(20,20))
+    ax4 = fig4.add_subplot(111)
+    ax4.scatter([e for e in range(len(test_f1_nonseq_micro_per_epoch))], test_f1_nonseq_micro_per_epoch)
+    ax4.tick_params(axis="both", length=2, width=1, labelsize=14)
+    ax4.set_xlabel("Epoch", fontsize=22)
+    ax4.set_ylabel("Test F1 nonsec micro", fontsize=22)
+    ax4.set_title("Test F1 nonsec micro vs Epoch", fontsize=32)
+    plt.savefig(os.path.join("./data/" ,"task_test_f1_nonseq_micro_vs_epoch_%d.png" % args.model_no))
+
+    fig5 = plt.figure(figsize=(20,20))
+    ax5 = fig5.add_subplot(111)
+    ax5.scatter([e for e in range(len(test_f1_nonseq_macro_per_epoch))], test_f1_nonseq_macro_per_epoch)
+    ax5.tick_params(axis="both", length=2, width=1, labelsize=14)
+    ax5.set_xlabel("Epoch", fontsize=22)
+    ax5.set_ylabel("Test F1 nonsec macro Accuracy", fontsize=22)
+    ax5.set_title("Test F1 nonsec macro vs Epoch", fontsize=32)
+    plt.savefig(os.path.join("./data/" ,"task_test_f1_nonseq_macro_vs_epoch_%d.png" % args.model_no))
+
+    fig6 = plt.figure(figsize=(20,20))
+    ax6 = fig6.add_subplot(111)
+    ax6.scatter([e for e in range(len(test_accuracy_per_epoch))], test_accuracy_per_epoch)
+    ax6.tick_params(axis="both", length=2, width=1, labelsize=14)
+    ax6.set_xlabel("Epoch", fontsize=22)
+    ax6.set_ylabel("Test Accuracy", fontsize=22)
+    ax6.set_title("Test Accuracy vs Epoch", fontsize=32)
+    plt.savefig(os.path.join("./data/" ,"task_test_accuracy_vs_epoch_%d.png" % args.model_no))
     
     return net

@@ -192,9 +192,15 @@ class pretrain_dataset(Dataset):
             lower_case = False
             model_name = 'BioBERT'
         elif args.model_no == 3:
+            from .model.BERT.tokenization_bert import BertTokenizer as Tokenizer
             model = 'bert-base-portuguese-cased'
             lower_case = True
-            model_name = 'BERTimbal'
+            model_name = 'BERTimbau'
+        elif args.model_no == 4:
+            from .model.BERT.tokenization_bert import BertTokenizer as Tokenizer
+            model = 'bert-base-multilingual-cased'
+            lower_case = True
+            model_name = 'BERTMultilingual'
 
         tokenizer_path = './data/%s_tokenizer.pkl' % (model_name)
         if os.path.isfile(tokenizer_path):
@@ -210,7 +216,7 @@ class pretrain_dataset(Dataset):
                                            do_lower_case=True)
 
             elif args.model_no == 4:
-                self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-uncased/vocab.txt',
+                self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-cased/vocab.txt',
                                            do_lower_case=True)
 
             else:
@@ -250,15 +256,18 @@ class pretrain_dataset(Dataset):
     def tokenize(self, D):
         (x, s1, s2), e1, e2 = D
         x = [w.lower() for w in x if x != '[BLANK]'] # we are using uncased model
-        
         ### Include random masks for MLM training
         forbidden_idxs = [i for i in range(s1[0], s1[1])] + [i for i in range(s2[0], s2[1])]
         pool_idxs = [i for i in range(len(x)) if i not in forbidden_idxs]
         masked_idxs = np.random.choice(pool_idxs,\
                                         size=round(self.mask_probability*len(pool_idxs)),\
                                         replace=False)
-        masked_for_pred = [token.lower() for idx, token in enumerate(x) if (idx in masked_idxs)]
-        #masked_for_pred = [w.lower() for w in masked_for_pred] # we are using uncased model
+        # masked_for_pred = [token.lower() for idx, token in enumerate(x) if (idx in masked_idxs)]
+        masked_for_pred = []
+        for idx, token in enumerate(x):
+            if (idx in masked_idxs):
+                masked_for_pred.append(token.lower())
+        masked_for_pred = [w.lower() for w in masked_for_pred] # we are using uncased model
         x = [token if (idx not in masked_idxs) else self.tokenizer.mask_token \
              for idx, token in enumerate(x)]
 
@@ -284,6 +293,7 @@ class pretrain_dataset(Dataset):
         
         x = self.tokenizer.convert_tokens_to_ids(x)
         masked_for_pred = self.tokenizer.convert_tokens_to_ids(masked_for_pred)
+        
         '''
         e1 = [e for idx, e in enumerate(x) if idx in [i for i in\
               range(x.index(self.E1_token_id) + 1, x.index(self.E1s_token_id))]]
@@ -440,7 +450,11 @@ def load_dataloaders(args, max_length=50000):
             
         logger.info("Total number of relation statements in pre-training corpus: %d" % len(D))
     else:
-        D = load_pickle(args.pretrain_data)
+        D = load_pickle(f'../{args.pretrain_data}')
+        # D = []
+        # text_chunks = (text[i*max_length:(i*max_length + max_length)] for i in range(num_chunks))
+        # for text_chunk in tqdm(text_chunks, total=num_chunks):
+        #     D.extend(create_pretraining_corpus(text_chunk, nlp, window_size=40))
     save_as_pickle("D.pkl", D)
     logger.info("Saved pre-training corpus to %s" % "./data/D.pkl")
     # else:

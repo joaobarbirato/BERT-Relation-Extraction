@@ -41,7 +41,10 @@ class infer_from_trained(object):
         self.detect_entities = detect_entities
         
         if self.detect_entities:
-            self.nlp = spacy.load("en_core_web_lg")
+            if args.model_no == 3 or args.model_no == 4:
+                self.nlp = spacy.load("pt_core_news_lg")
+            else:
+                self.nlp = spacy.load("en_core_web_lg")
         else:
             self.nlp = None
         self.entities_of_interest = ["PERSON", "NORP", "FAC", "ORG", "GPE", "LOC", "PRODUCT", "EVENT", \
@@ -78,11 +81,11 @@ class infer_from_trained(object):
                                                  model_size='bert-base-uncased',
                                                  task='classification',\
                                                  n_classes_=self.args.num_classes)
-        elif args.model_no == 3: # BERTimbal
+        elif args.model_no == 3: # BERTimbau
             from ..model.BERT.modeling_bert import BertConfig, BertModel
             model = 'bert-base-portuguese-cased'
             lower_case = True
-            model_name = 'BERTimbal'
+            model_name = 'BERTimbau'
             config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
             self.net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                             config=config,
@@ -91,17 +94,13 @@ class infer_from_trained(object):
                                             task='classification',\
                                             n_classes_=args.num_classes)
         elif args.model_no == 4: # Multilingual BERT
-            from ..model.BERT.modeling_bert import BertConfig, BertModel
-            model = 'bert-base-multilingual-uncased'
+            from ..model.BERT.modeling_bert import BertModel as Model
+            model = 'bert-base-multilingual-cased'
             lower_case = True
             model_name = 'BERTMultilingual'
-            config = BertConfig.from_pretrained('./additional_models/bert-base-multilingual-uncased/config.json')
-            self.net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-multilingual-uncased/pytorch_model.bin', 
-                                            config=config,
-                                            force_download=False, \
-                                            model_size='bert-base-uncased', \
-                                            task='classification',\
-                                            n_classes_=args.num_classes)
+            self.net = Model.from_pretrained(model, force_download=False, \
+                                         model_size=args.model_size,\
+                                         task='classification', n_classes_=self.args.num_classes)
         
         self.tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
         self.net.resize_token_embeddings(len(self.tokenizer))
@@ -245,20 +244,37 @@ class infer_from_trained(object):
         else:
             return self.infer_one_sentence(sentence)
 
-    def infer_save_test(self):
+    def infer_save_test(self, detect_entities=False):
         """
         docstring
         """
-        logger.info("Creating infer file")
+        if not detect_entities:
+            logger.info("Creating infer file")
+        else:
+            logger.info("Creating infer detect file")
         df_test = load_pickle('df_test.pkl')
         sents = df_test['sents'].values
-        infered_sents = [self.rm.idx2rel[self.infer_one_sentence(sentence)].strip() for sentence in sents]
-        df_infered = pd.DataFrame([], columns=['sents', 'true', 'infer'])
+        infered_sents = [self.rm.idx2rel[self.infer_sentence(sentence, detect_entities)].strip() for sentence in sents]
+        if not detect_entities:
+            columns = ['sents', 'true', 'infer']
+        else:
+            columns = ['sents', 'infer']
+
+        df_infered = pd.DataFrame([], columns=columns)
         df_infered['sents'] = sents
-        df_infered['true'] = [v.replace('\n', '') for v in df_test['relations'].values]
+
+        if not detect_entities:
+            df_infered['true'] = [v.replace('\n', '') for v in df_test['relations'].values]
+
         df_infered['infer'] = infered_sents
-        save_as_pickle('df_infered.pkl', df_infered)
-        logger.info("Infer file created!")
+
+        if detect_entities:
+            save_as_pickle('df_infered_detected.pkl', df_infered)
+            logger.info("Infer detection file created!")
+        else:
+            save_as_pickle('df_infered.pkl', df_infered)
+            logger.info("Infer file created!")
+        
 
 
 class FewRel(object):
@@ -300,29 +316,27 @@ class FewRel(object):
                                             model_size='bert-base-uncased',
                                             task='fewrel')
 
-        # bert-base-multilingual-uncased
-        elif args.model_no == 3: # BERTimbal
+        # bert-base-multilingual-cased
+        elif args.model_no == 3: # BERTimbau
             from .model.BERT.modeling_bert import BertModel, BertConfig
             model = 'bert-base-portuguese-cased'
             lower_case = True
-            model_name = 'BERTimbal'
+            model_name = 'BERTimbau'
             config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
             self.net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                                 config=config,
                                                 force_download=False, \
                                                 model_size='bert-base-portuguese-cased', \
                                                 task='fewrel')
-        elif args.model_no == 4: # bert-base-multilingual-uncased
-            from .model.BERT.modeling_bert import BertModel, BertConfig
-            model = 'bert-base-multilingual-uncased'
+        elif args.model_no == 4: # bert-base-multilingual-cased
+            from ..model.BERT.modeling_bert import BertModel as Model
+            from ..model.BERT.tokenization_bert import BertTokenizer as Tokenizer
+            model = 'bert-base-multilingual-cased'
             lower_case = True
             model_name = 'BERTMultilingual'
-            config = BertConfig.from_pretrained('./additional_models/bert-base-multilingual-uncased/config.json')
-            self.net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-multilingual-uncased/pytorch_model.bin', 
-                                                config=config,
-                                                force_download=False, \
-                                                model_size='bert-base-portuguese-cased', \
-                                                task='fewrel')
+            self.net = Model.from_pretrained(model, force_download=False, \
+                                             model_size=args.model_size,\
+                                             task='fewrel')
         
         if os.path.isfile('./data/%s_tokenizer.pkl' % model_name):
             self.tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
@@ -336,7 +350,7 @@ class FewRel(object):
                 self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-portuguese-cased/vocab.txt',
                                            do_lower_case=True)
             elif args.model_no == 4:
-                self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-uncased/vocab.txt',
+                self.tokenizer = Tokenizer(vocab_file='./additional_models/bert-base-multilingual-cased/vocab.txt',
                                            do_lower_case=True)
             else:
                 self.tokenizer = Tokenizer.from_pretrained(model, do_lower_case=False)

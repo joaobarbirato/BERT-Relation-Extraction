@@ -62,26 +62,23 @@ def train_and_fit(args):
                                           config=config,
                                           force_download=False, \
                                           model_size='bert-base-uncased')
-    elif args.model_no == 3: # BERTimbal
+    elif args.model_no == 3: # BERTimbau
         from .model.BERT.modeling_bert import BertModel, BertConfig, BertForSequenceClassification
         model = 'bert-base-portuguese-cased'
         lower_case = True
-        model_name = 'BERTimbal'
+        model_name = 'BERTimbau'
         config = BertConfig.from_pretrained('./additional_models/bert-base-portuguese-cased/config.json')
         net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-portuguese-cased/pytorch_model.bin', 
                                             config=config,
                                             force_download=False, \
                                             model_size='bert-base-uncased')
     elif args.model_no == 4: # Multilingual BERT
-        from .model.BERT.modeling_bert import BertModel, BertConfig
-        model = 'bert-base-multilingual-uncased'
+        from .model.BERT.modeling_bert import BertModel as Model
+        model = 'bert-base-multilingual-cased'
         lower_case = True
-        model_name = 'BERTimbal'
-        config = BertConfig.from_pretrained('./additional_models/bert-base-multilingual-uncased/config.json')
-        net = BertModel.from_pretrained(pretrained_model_name_or_path='./additional_models/bert-base-multilingual-uncased/pytorch_model.bin', 
-                                            config=config,
-                                            force_download=False, \
-                                            model_size='bert-base-uncased')
+        model_name = 'BERTMultilingual'
+        net = Model.from_pretrained(model, force_download=False, \
+                                model_size=args.model_size)
     
     tokenizer = load_pickle("%s_tokenizer.pkl" % model_name)
     net.resize_token_embeddings(len(tokenizer))
@@ -132,6 +129,7 @@ def train_and_fit(args):
     pad_id = tokenizer.pad_token_id
     mask_id = tokenizer.mask_token_id
     update_size = len(train_loader)//10
+    all_start_time = time.time()
     for epoch in range(start_epoch, args.num_epochs):
         start_time = time.time()
         net.train(); total_loss = 0.0; losses_per_batch = []; total_acc = 0.0; lm_accuracy_per_batch = []
@@ -220,7 +218,7 @@ def train_and_fit(args):
                     'scheduler' : scheduler.state_dict(),\
                     'amp': amp.state_dict() if amp is not None else amp
                 }, os.path.join("./data/" , "test_checkpoint_%d.pth.tar" % args.model_no))
-    
+    save_as_pickle(f"mtb_elapsed_{args.model_no}.pkl", time.time() - all_start_time)
     logger.info("Finished Training!")
     fig = plt.figure(figsize=(20,20))
     ax = fig.add_subplot(111)

@@ -48,14 +48,34 @@ def load_results(model_no=0):
     losses_path = "./data/task_test_losses_per_epoch_%d.pkl" % model_no
     accuracy_path = "./data/task_train_accuracy_per_epoch_%d.pkl" % model_no
     f1_path = "./data/task_test_f1_per_epoch_%d.pkl" % model_no
-    if os.path.isfile(losses_path) and os.path.isfile(accuracy_path) and os.path.isfile(f1_path):
+
+    f1_micro_path = "./data/task_test_f1_nonseq_micro_per_epoch_%d.pkl" % model_no
+    f1_macro_path = "./data/task_test_f1_nonseq_macro_per_epoch_%d.pkl" % model_no
+    test_accuracy_path = "./data/task_test_accuracy_per_epoch_%d.pkl" % model_no
+    precision_recall_micro_path = "./data/task_test_precision_recall_micro_per_epoch_%d.pkl" % model_no
+    precision_recall_macro_path = "./data/task_test_precision_recall_macro_per_epoch_%d.pkl" % model_no
+
+    if os.path.isfile(losses_path) and os.path.isfile(accuracy_path) and os.path.isfile(f1_path) \
+        and os.path.isfile(f1_micro_path) and os.path.isfile(f1_macro_path) and os.path.isfile(test_accuracy_path):
+
         losses_per_epoch = load_pickle("task_test_losses_per_epoch_%d.pkl" % model_no)
         accuracy_per_epoch = load_pickle("task_train_accuracy_per_epoch_%d.pkl" % model_no)
         f1_per_epoch = load_pickle("task_test_f1_per_epoch_%d.pkl" % model_no)
+
+        f1_micro_per_epoch = load_pickle("task_test_f1_per_epoch_%d.pkl" % model_no)
+        f1_macro_per_epoch = load_pickle("task_test_f1_per_epoch_%d.pkl" % model_no)
+        test_accuracy_per_epoch = load_pickle("task_test_f1_per_epoch_%d.pkl" % model_no)
+
+        precision_recall_micro_per_epoch = load_pickle("task_test_precision_recall_micro_per_epoch_%d.pkl" % model_no)
+        precision_recall_macro_per_epoch = load_pickle("task_test_precision_recall_macro_per_epoch_%d.pkl" % model_no)
+
         logger.info("Loaded results buffer")
     else:
-        losses_per_epoch, accuracy_per_epoch, f1_per_epoch = [], [], []
-    return losses_per_epoch, accuracy_per_epoch, f1_per_epoch
+        losses_per_epoch, accuracy_per_epoch, f1_per_epoch, f1_micro_per_epoch, \
+            f1_macro_per_epoch, test_accuracy_per_epoch, precision_recall_micro_per_epoch, \
+            precision_recall_macro_per_epoch = [], [], [], [], [], [], [], []
+    return losses_per_epoch, accuracy_per_epoch, f1_per_epoch, f1_micro_per_epoch, \
+        f1_macro_per_epoch, test_accuracy_per_epoch, precision_recall_micro_per_epoch, precision_recall_macro_per_epoch
 
 
 def evaluate_(output, labels, ignore_idx):
@@ -77,6 +97,7 @@ def evaluate_(output, labels, ignore_idx):
 
     return acc, (o, l)
 
+from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 def evaluate_results(net, test_loader, pad_id, cuda):
     logger.info("Evaluating test samples...")
     acc = 0; out_labels = []; true_labels = []
@@ -107,9 +128,47 @@ def evaluate_results(net, test_loader, pad_id, cuda):
         "recall": recall_score(true_labels, out_labels),
         "f1": f1_score(true_labels, out_labels)
     }
+
+    p_micro, r_micro, f_micro, _ = precision_recall_fscore_support(
+        y_true=[tl for batch in true_labels for tl in batch],
+        y_pred=[pl for batch in out_labels for pl in batch],
+        average='micro',
+        zero_division=0
+    )
+
+    results_non_seq_micro = {
+        "accuracy": accuracy,
+        "precision": p_micro,
+        "recall": r_micro,
+        "f1": f_micro
+    }
+
+    p_macro, r_macro, f_macro, _ = precision_recall_fscore_support(
+        y_true=[tl for batch in true_labels for tl in batch],
+        y_pred=[pl for batch in out_labels for pl in batch],
+        average='macro',
+        zero_division=0
+    )
+
+    results_non_seq_macro = {
+        "accuracy": accuracy,
+        "precision": p_macro,
+        "recall": r_macro,
+        "f1": f_macro
+    }
+
+    test_accuracy = accuracy_score(
+        y_true=[tl for batch in true_labels for tl in batch],
+        y_pred=[pl for batch in out_labels for pl in batch],
+    )
+
     logger.info("***** Eval results *****")
     for key in sorted(results.keys()):
-        logger.info("  %s = %s", key, str(results[key]))
-    
-    return results
+        # logger.info("  %s = %s", key, str(results[key]))
+        if key != 'accuracy':
+            logger.info(f'test {key}(micro, macro) = ({results_non_seq_micro[key]:.3f},{results_non_seq_macro[key]:.3f})')
+        else:
+            logger.info(f'{key} (training) = {results[key]:.3f}')
+
+    return results, results_non_seq_micro, results_non_seq_macro, test_accuracy
     
