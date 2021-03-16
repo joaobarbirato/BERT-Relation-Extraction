@@ -146,7 +146,8 @@ def train_and_fit(args):
     
     losses_per_epoch, accuracy_per_epoch, test_f1_per_epoch, test_f1_nonseq_micro_per_epoch, \
         test_f1_nonseq_macro_per_epoch, test_accuracy_per_epoch, \
-        precision_recall_micro_per_epoch, precision_recall_macro_per_epoch = load_results(args.model_no)
+        precision_recall_micro_per_epoch, precision_recall_macro_per_epoch, \
+        report_per_epoch = load_results(args.model_no)
     
     logger.info("Starting training process...")
     pad_id = tokenizer.pad_token_id
@@ -202,7 +203,7 @@ def train_and_fit(args):
                 total_loss = 0.0; total_acc = 0.0
         
         scheduler.step()
-        results, results_micro, results_macro, test_accuracy = evaluate_results(net, test_loader, pad_id, cuda)
+        results, results_micro, results_macro, test_accuracy, report = evaluate_results(net, test_loader, pad_id, cuda)
         losses_per_epoch.append(sum(losses_per_batch)/len(losses_per_batch))
         accuracy_per_epoch.append(sum(accuracy_per_batch)/len(accuracy_per_batch))
         test_f1_per_epoch.append(results['f1'])
@@ -217,6 +218,7 @@ def train_and_fit(args):
         precision_recall_macro_per_epoch.append(
             (results_micro['precision'], results_micro['recall'])
         )
+        report_per_epoch.append(report)
 
         print("Epoch finished, took %.2f seconds." % (time.time() - start_time))
         print("Losses at Epoch %d: %.7f" % (epoch + 1, losses_per_epoch[-1]))
@@ -249,6 +251,8 @@ def train_and_fit(args):
 
             save_as_pickle("task_test_precision_recall_micro_per_epoch_%d.pkl" % args.model_no, precision_recall_micro_per_epoch)
             save_as_pickle("task_test_precision_recall_macro_per_epoch_%d.pkl" % args.model_no, precision_recall_macro_per_epoch)
+
+            save_as_pickle("task_report_per_epoch_%d.pkl" % args.model_no, report_per_epoch)
 
             torch.save({
                     'epoch': epoch + 1,\

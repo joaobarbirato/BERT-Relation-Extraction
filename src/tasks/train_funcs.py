@@ -54,6 +54,7 @@ def load_results(model_no=0):
     test_accuracy_path = "./data/task_test_accuracy_per_epoch_%d.pkl" % model_no
     precision_recall_micro_path = "./data/task_test_precision_recall_micro_per_epoch_%d.pkl" % model_no
     precision_recall_macro_path = "./data/task_test_precision_recall_macro_per_epoch_%d.pkl" % model_no
+    report_path = "./data/task_report_per_epoch_%d.pkl" % model_no
 
     if os.path.isfile(losses_path) and os.path.isfile(accuracy_path) and os.path.isfile(f1_path) \
         and os.path.isfile(f1_micro_path) and os.path.isfile(f1_macro_path) and os.path.isfile(test_accuracy_path):
@@ -69,13 +70,16 @@ def load_results(model_no=0):
         precision_recall_micro_per_epoch = load_pickle("task_test_precision_recall_micro_per_epoch_%d.pkl" % model_no)
         precision_recall_macro_per_epoch = load_pickle("task_test_precision_recall_macro_per_epoch_%d.pkl" % model_no)
 
+        report_per_epoch = load_pickle("task_report_per_epoch_%d.pkl" % model_no)
+
         logger.info("Loaded results buffer")
     else:
         losses_per_epoch, accuracy_per_epoch, f1_per_epoch, f1_micro_per_epoch, \
-            f1_macro_per_epoch, test_accuracy_per_epoch, precision_recall_micro_per_epoch, \
-            precision_recall_macro_per_epoch = [], [], [], [], [], [], [], []
+        f1_macro_per_epoch, test_accuracy_per_epoch, precision_recall_micro_per_epoch, \
+        precision_recall_macro_per_epoch, report_per_epoch = [], [], [], [], [], [], [], [], []
     return losses_per_epoch, accuracy_per_epoch, f1_per_epoch, f1_micro_per_epoch, \
-        f1_macro_per_epoch, test_accuracy_per_epoch, precision_recall_micro_per_epoch, precision_recall_macro_per_epoch
+        f1_macro_per_epoch, test_accuracy_per_epoch, precision_recall_micro_per_epoch, \
+        precision_recall_macro_per_epoch, report_per_epoch
 
 
 def evaluate_(output, labels, ignore_idx):
@@ -97,7 +101,22 @@ def evaluate_(output, labels, ignore_idx):
 
     return acc, (o, l)
 
-from sklearn.metrics import precision_recall_fscore_support, accuracy_score
+
+def convert_cr_idx2rel(cr):
+    rm = load_pickle("relations.pkl")
+    new_cr = {}
+    general_metrics = ['accurcacy', 'macro avg', 'weighted avg']
+    for gm in general_metrics:
+        new_cr[gm] = cr[gm]
+
+    for k, v in cr.items():
+        if not k in general_metrics:
+            new_cr[rm.idx2rel[k]] = cr[k]
+    
+    return cr
+
+
+from sklearn.metrics import precision_recall_fscore_support, accuracy_score, classification_report
 def evaluate_results(net, test_loader, pad_id, cuda):
     logger.info("Evaluating test samples...")
     acc = 0; out_labels = []; true_labels = []
@@ -129,6 +148,20 @@ def evaluate_results(net, test_loader, pad_id, cuda):
         "f1": f1_score(true_labels, out_labels)
     }
 
+    # converting relation specific metrics from ids to labels
+    cr = convert_cr_idx2rel(classification_report(
+        y_true=[tl for batch in true_labels for tl in batch],
+        y_pred=[pl for batch in out_labels for pl in batch],
+        output_dict=True
+    ))
+    test_accuracy = cr['accuracy']
+
+    results_non_seq_macro = {
+        "precision":  cr['macro avg']['precision'],
+        "recall": cr['macro avg']['recall'],
+        "f1": cr['macro avg']['f1-score']
+    }
+
     p_micro, r_micro, f_micro, _ = precision_recall_fscore_support(
         y_true=[tl for batch in true_labels for tl in batch],
         y_pred=[pl for batch in out_labels for pl in batch],
@@ -137,25 +170,12 @@ def evaluate_results(net, test_loader, pad_id, cuda):
     )
 
     results_non_seq_micro = {
-        "accuracy": accuracy,
         "precision": p_micro,
         "recall": r_micro,
         "f1": f_micro
     }
 
-    p_macro, r_macro, f_macro, _ = precision_recall_fscore_support(
-        y_true=[tl for batch in true_labels for tl in batch],
-        y_pred=[pl for batch in out_labels for pl in batch],
-        average='macro',
-        zero_division=0
-    )
 
-    results_non_seq_macro = {
-        "accuracy": accuracy,
-        "precision": p_macro,
-        "recall": r_macro,
-        "f1": f_macro
-    }
 
     test_accuracy = accuracy_score(
         y_true=[tl for batch in true_labels for tl in batch],
@@ -170,5 +190,5 @@ def evaluate_results(net, test_loader, pad_id, cuda):
         else:
             logger.info(f'{key} (training) = {results[key]:.3f}')
 
-    return results, results_non_seq_micro, results_non_seq_macro, test_accuracy
+    return results, results_non_seq_micro, results_non_seq_macro, test_accuracy, cr
     
