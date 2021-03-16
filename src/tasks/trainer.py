@@ -152,7 +152,7 @@ def train_and_fit(args):
     logger.info("Starting training process...")
     pad_id = tokenizer.pad_token_id
     mask_id = tokenizer.mask_token_id
-    update_size = len(train_loader)//10
+    update_size = len(train_loader)#//10
     all_start_time = time.time()
     for epoch in range(start_epoch, args.num_epochs):
         start_time = time.time()

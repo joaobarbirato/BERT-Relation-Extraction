@@ -105,13 +105,13 @@ def evaluate_(output, labels, ignore_idx):
 def convert_cr_idx2rel(cr):
     rm = load_pickle("relations.pkl")
     new_cr = {}
-    general_metrics = ['accurcacy', 'macro avg', 'weighted avg']
+    general_metrics = ['accuracy', 'macro avg', 'weighted avg']
     for gm in general_metrics:
         new_cr[gm] = cr[gm]
 
     for k, v in cr.items():
         if not k in general_metrics:
-            new_cr[rm.idx2rel[k]] = cr[k]
+            new_cr[rm.idx2rel[int(k)].replace('\n', '')] = cr[k]
     
     return cr
 
