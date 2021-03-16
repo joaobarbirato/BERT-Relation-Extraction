@@ -112,10 +112,10 @@ def train_and_fit(args):
         
     for name, param in net.named_parameters():
         if not any([layer in name for layer in unfrozen_layers]):
-            print("[FROZE]: %s" % name)
+            logger.info("[FROZE]: %s" % name)
             param.requires_grad = False
         else:
-            print("[FREE]: %s" % name)
+            logger.info("[FREE]: %s" % name)
             param.requires_grad = True
     
     if args.use_pretrained_blanks == 1:
@@ -198,7 +198,7 @@ def train_and_fit(args):
             if (i % update_size) == (update_size - 1):
                 losses_per_batch.append(args.gradient_acc_steps*total_loss/update_size)
                 accuracy_per_batch.append(total_acc/update_size)
-                print('[Epoch: %d, %5d/ %d points] total loss, accuracy per batch: %.3f, %.3f' %
+                logger.info('[Epoch: %d, %5d/ %d points] total loss, accuracy per batch: %.3f, %.3f' %
                       (epoch + 1, (i + 1)*args.batch_size, train_len, losses_per_batch[-1], accuracy_per_batch[-1]))
                 total_loss = 0.0; total_acc = 0.0
         
@@ -220,13 +220,13 @@ def train_and_fit(args):
         )
         report_per_epoch.append(report)
 
-        print("Epoch finished, took %.2f seconds." % (time.time() - start_time))
-        print("Losses at Epoch %d: %.7f" % (epoch + 1, losses_per_epoch[-1]))
-        print("Train accuracy at Epoch %d: %.7f" % (epoch + 1, accuracy_per_epoch[-1]))
-        print("Test f1 at Epoch %d: %.7f" % (epoch + 1, test_f1_per_epoch[-1]))
+        logger.info("Epoch finished, took %.2f seconds." % (time.time() - start_time))
+        logger.info("Losses at Epoch %d: %.7f" % (epoch + 1, losses_per_epoch[-1]))
+        logger.info("Train accuracy at Epoch %d: %.7f" % (epoch + 1, accuracy_per_epoch[-1]))
+        logger.info("Test f1 at Epoch %d: %.7f" % (epoch + 1, test_f1_per_epoch[-1]))
 
-        print(f"Test f1 nonseq micro at Epoch {epoch + 1}: {test_f1_nonseq_micro_per_epoch[-1]:.3f}")
-        print(f"Test f1 nonseq macro at Epoch {epoch + 1}: {test_f1_nonseq_macro_per_epoch[-1]:.3f}")
+        logger.info(f"Test f1 nonseq micro at Epoch {epoch + 1}: {test_f1_nonseq_micro_per_epoch[-1]:.3f}")
+        logger.info(f"Test f1 nonseq macro at Epoch {epoch + 1}: {test_f1_nonseq_macro_per_epoch[-1]:.3f}")
 
         
         if accuracy_per_epoch[-1] > best_pred:

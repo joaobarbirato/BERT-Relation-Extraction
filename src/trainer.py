@@ -101,10 +101,10 @@ def train_and_fit(args):
             
         for name, param in net.named_parameters():
             if not any([layer in name for layer in unfrozen_layers]):
-                print("[FROZE]: %s" % name)
+                logger.info("[FROZE]: %s" % name)
                 param.requires_grad = False
             else:
-                print("[FREE]: %s" % name)
+                logger.info("[FREE]: %s" % name)
                 param.requires_grad = True
        
     criterion = Two_Headed_Loss(lm_ignore_idx=tokenizer.pad_token_id, use_logits=True, normalize=False)
@@ -138,7 +138,7 @@ def train_and_fit(args):
             masked_for_pred1 =  masked_for_pred
             masked_for_pred = masked_for_pred[(masked_for_pred != pad_id)]
             if masked_for_pred.shape[0] == 0:
-                print('Empty dataset, skipping...')
+                logger.info('Empty dataset, skipping...')
                 continue
             attention_mask = (x != pad_id).float()
             token_type_ids = torch.zeros((x.shape[0], x.shape[1])).long()
@@ -183,7 +183,7 @@ def train_and_fit(args):
             if (i % update_size) == (update_size - 1):
                 losses_per_batch.append(args.gradient_acc_steps*total_loss/update_size)
                 lm_accuracy_per_batch.append(total_acc/update_size)
-                print('[Epoch: %d, %5d/ %d points] total loss, lm accuracy per batch: %.3f, %.3f' %
+                logger.info('[Epoch: %d, %5d/ %d points] total loss, lm accuracy per batch: %.3f, %.3f' %
                       (epoch + 1, (i + 1), train_len, losses_per_batch[-1], lm_accuracy_per_batch[-1]))
                 total_loss = 0.0; total_acc = 0.0
                 logger.info("Last batch samples (pos, neg): %d, %d" % ((blank_labels.squeeze() == 1).sum().item(),\
@@ -192,9 +192,9 @@ def train_and_fit(args):
         scheduler.step()
         losses_per_epoch.append(sum(losses_per_batch)/len(losses_per_batch))
         accuracy_per_epoch.append(sum(lm_accuracy_per_batch)/len(lm_accuracy_per_batch))
-        print("Epoch finished, took %.2f seconds." % (time.time() - start_time))
-        print("Losses at Epoch %d: %.7f" % (epoch + 1, losses_per_epoch[-1]))
-        print("Accuracy at Epoch %d: %.7f" % (epoch + 1, accuracy_per_epoch[-1]))
+        logger.info("Epoch finished, took %.2f seconds." % (time.time() - start_time))
+        logger.info("Losses at Epoch %d: %.7f" % (epoch + 1, losses_per_epoch[-1]))
+        logger.info("Accuracy at Epoch %d: %.7f" % (epoch + 1, accuracy_per_epoch[-1]))
         
         if accuracy_per_epoch[-1] > best_pred:
             best_pred = accuracy_per_epoch[-1]
